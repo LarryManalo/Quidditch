@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+<style>
+canvas {
+    border:1px solid #d3d3d3;
+    background-image: url('Field.png');
+    background-color: #f1f1f1;
+}
+</style>
+</head>
+<body onload='startGame()'>
+<script>
+
+var snitch;
+var Gryffindor;
+var Hufflepuff;
+var Ravenclaw;
+var Slytherin;
+var collision = 0;
+var i=3;
+var cntdnImg;
+
+function startGame() {
+	snitch = new component(30, 30, 'snitch.png', 625, 348, 'image', 'snitch');
+	Gryffindor = new component(75, 50, 'Gryffindor.png', 2, 2, 'image', 'Gryffindor');
+	Hufflepuff = new component(75, 50, 'Hufflepuff_rev.png', 1203, 2, 'image', 'Hufflepuff');
+	Ravenclaw = new component(75, 50, 'Ravenclaw.png', 2, 643, 'image', 'Ravenclaw');
+	Slytherin = new component(75, 50, 'Slytherin_rev.png', 1203, 643, 'image', 'Slytherin');
+  Countdown = new component(143, 260, '3.png', 565, 210, 'image', 'Countdown');
+	myGameArea.start();
+}
+
+var music = new Audio('Quidditchmidi.wav');
+
+//function show_image(src, width, height, alt) {
+//    var img = document.createElement('img');
+//    img.src = src;
+//    img.width = width;
+//    img.height = height;
+//    img.alt = alt;
+//}
+
+var myGameArea = {
+    canvas : document.createElement('canvas'),
+    start : function() {
+        this.canvas.width = 1280;
+        this.canvas.height = 720;
+        this.context = this.canvas.getContext('2d');
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        console.log(i);
+        this.interval = setInterval(updateGameArea, 20);
+      },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    stop : function() {
+        clearInterval(this.interval);
+    }
+}
+
+function component(width, height, color, x, y, type, name) {
+    this.name = name;
+    this.type = type;
+    if (type == 'image') {
+        this.image = new Image();
+        this.image.src = color;
+    }
+    this.width = width;
+    this.height = height;
+    this.speedX = 0;
+    this.speedY = 0;
+    this.x = x;
+    this.y = y;
+    this.update = function() {
+        ctx = myGameArea.context;
+        if (type == 'image') {
+            ctx.drawImage(this.image,
+                this.x,
+                this.y,
+                this.width, this.height);
+        } else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+    this.newPos = function() {
+        if (this.x>=1250){
+		        this.x = 1250;
+		        this.speedX = -1;
+	      }
+	      else {
+		        this.x += this.speedX;
+        }
+
+	      if (this.x<=1){
+		        this.x = 1;
+		        this.speedX = 1;
+	      }
+	      else {
+		        this.x += this.speedX;
+	      }
+
+	      if (this.y<=1){
+		        this.y = 1;
+		        this.speedY = 1;
+	      }
+	      else {
+		        this.y += this.speedY;
+	      }
+
+	      if (this.y>=690){
+		        this.y = 690;
+		        this.speedY = -1;
+	      }
+	      else {
+		        this.y += this.speedY;
+	      }
+    }
+    this.collisionCheck = function(){
+      if ((((this.y + this.height - 15) < snitch.y)) ||
+            ((this.y+5) > (snitch.y + snitch.height - 5)) ||
+            ((this.x + this.width -15) < snitch.x) ||
+            (this.x+20 > (snitch.x + snitch.width))) {
+        collision = 0;
+      }
+      else {
+        collision = 1;
+        music.pause();
+        var winAnnounce = this.name;
+        winAnnounce += " is the Winner!";
+        alert(winAnnounce);
+        location.reload();
+        }
+    }
+}
+
+function randplayermove(player) {
+  randIntPX = Math.round(Math.random()) * 2 - 1;
+	randIntPY = Math.round(Math.random()) * 2 - 1;
+	player.speedX += randIntPX;
+  player.speedY += randIntPY;
+  var dirImg = player.name;
+  function fwdRev(){
+    if (player.speedX >=0){
+      dirImg += '.png';
+      }
+    else {
+      dirImg += '_rev.png';
+      }
+    return dirImg;
+  }
+  player.image.src = fwdRev();
+}
+
+function increment(){
+  Countdown.image.src = cntdnImg;
+}
+
+function countdown(){
+  for (i=3; i>0; i--){
+    Countdown.update();
+    cntdnImg = i + '.png';
+    console.log(cntdnImg);
+    console.log(i);
+    setInterval(function() {increment()}, 1000);
+    //setTimeout(function() {increment();}, 1000);
+    }
+  }
+
+music.play();
+setInterval(function() {randplayermove(snitch)}, 500);
+setInterval(function() {randplayermove(Gryffindor)}, 1000);
+setInterval(function() {randplayermove(Hufflepuff)}, 1000);
+setInterval(function() {randplayermove(Ravenclaw)}, 1000);
+setInterval(function() {randplayermove(Slytherin)}, 1000);
+function updateGameArea() {
+  myGameArea.clear();
+  countdown();
+  snitch.newPos();
+  snitch.update();
+  Gryffindor.newPos();
+  Gryffindor.update();
+  Gryffindor.collisionCheck();
+  Hufflepuff.newPos();
+  Hufflepuff.update();
+  Hufflepuff.collisionCheck();
+  Ravenclaw.newPos();
+  Ravenclaw.update();
+  Ravenclaw.collisionCheck();
+  Slytherin.newPos();
+  Slytherin.update();
+  Slytherin.collisionCheck();
+}
+
+</script>
+</body>
+</html>
